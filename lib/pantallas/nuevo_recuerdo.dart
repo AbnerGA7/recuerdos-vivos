@@ -23,7 +23,11 @@ class NuevoRecuerdo extends StatefulWidget {
 
 class _NuevoRecuerdoState extends State<NuevoRecuerdo> {
   late final _titulo = TextEditingController(text: widget.editar?.titulo);
-  late final _personas = TextEditingController(text: widget.editar?.personas);
+  late final List<_Fila> _gente = [
+    for (final p in widget.editar?.gente ?? const <Persona>[]) _Fila(p.nombre, p.parentesco),
+    if ((widget.editar?.gente.isEmpty ?? true) && (widget.editar?.personas.isNotEmpty ?? false))
+      _Fila(widget.editar!.personas, ''),
+  ];
   late final _lugar = TextEditingController(text: widget.editar?.lugar);
   late final _cuando = TextEditingController(text: widget.editar?.cuando);
   late final _historia = TextEditingController(text: widget.editar?.historia);
@@ -32,8 +36,11 @@ class _NuevoRecuerdoState extends State<NuevoRecuerdo> {
 
   @override
   void dispose() {
-    for (final c in [_titulo, _personas, _lugar, _cuando, _historia]) {
+    for (final c in [_titulo, _lugar, _cuando, _historia]) {
       c.dispose();
+    }
+    for (final f in _gente) {
+      f.dispose();
     }
     super.dispose();
   }
@@ -68,7 +75,11 @@ class _NuevoRecuerdoState extends State<NuevoRecuerdo> {
       id: previo?.id ?? almacen.nuevoId(),
       rutaFoto: ruta,
       titulo: _titulo.text.trim(),
-      personas: _personas.text.trim(),
+      gente: [
+        for (final f in _gente)
+          if (f.nombre.text.trim().isNotEmpty)
+            Persona(nombre: f.nombre.text.trim(), parentesco: f.parentesco.text.trim()),
+      ],
       lugar: _lugar.text.trim(),
       cuando: _cuando.text.trim(),
       historia: _historia.text.trim(),
@@ -80,6 +91,16 @@ class _NuevoRecuerdoState extends State<NuevoRecuerdo> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(previo == null ? 'Foto guardada' : 'Cambios guardados')),
     );
+  }
+
+  /// Familiares de otras fotos que aún no están en esta.
+  List<Persona> _sugeridas(BuildContext context) {
+    final ya = _gente.map((f) => f.nombre.text.trim().toLowerCase()).toSet();
+    return AlmacenScope.of(context)
+        .familia
+        .where((p) => !ya.contains(p.nombre.trim().toLowerCase()))
+        .take(8)
+        .toList();
   }
 
   @override
@@ -131,7 +152,42 @@ class _NuevoRecuerdoState extends State<NuevoRecuerdo> {
               const SizedBox(height: 24),
               CampoDictado(controlador: _titulo, etiqueta: 'Nombre del recuerdo', ejemplo: 'Cumpleaños de la abuela'),
               const SizedBox(height: 22),
-              CampoDictado(controlador: _personas, etiqueta: '¿Quiénes salen?', ejemplo: 'Tu hija Carmen y tu nieto Luis'),
+              Text('¿Quiénes salen?', style: estilos.titleLarge),
+              const SizedBox(height: 4),
+              Text(
+                'Con el nombre y el parentesco, la app puede dar pistas como «es tu hija».',
+                style: estilos.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              for (final f in _gente)
+                _TarjetaPersona(
+                  fila: f,
+                  onQuitar: () => setState(() {
+                    _gente.remove(f);
+                    f.dispose();
+                  }),
+                ),
+              if (_sugeridas(context).isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final p in _sugeridas(context))
+                        ActionChip(
+                          avatar: const Icon(Icons.add_rounded, size: 22),
+                          label: Text(p.descripcion, style: estilos.bodyMedium),
+                          onPressed: () => setState(() => _gente.add(_Fila(p.nombre, p.parentesco))),
+                        ),
+                    ],
+                  ),
+                ),
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _gente.add(_Fila('', ''))),
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 28),
+                label: const Text('Agregar persona'),
+              ),
               const SizedBox(height: 22),
               CampoDictado(controlador: _lugar, etiqueta: '¿Dónde fue?', ejemplo: 'La casa de Chosica'),
               const SizedBox(height: 22),
@@ -168,6 +224,61 @@ class _Origen extends StatelessWidget {
       onPressed: onTap,
       icon: Icon(icono, size: 36),
       label: Text(texto),
+    );
+  }
+}
+
+/// Controladores de una persona en el formulario.
+class _Fila {
+  _Fila(String nombre, String parentesco)
+      : nombre = TextEditingController(text: nombre),
+        parentesco = TextEditingController(text: parentesco);
+
+  final TextEditingController nombre;
+  final TextEditingController parentesco;
+
+  void dispose() {
+    nombre.dispose();
+    parentesco.dispose();
+  }
+}
+
+class _TarjetaPersona extends StatelessWidget {
+  const _TarjetaPersona({required this.fila, required this.onQuitar});
+
+  final _Fila fila;
+  final VoidCallback onQuitar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      decoration: BoxDecoration(
+        color: Colores.fondo,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colores.linea, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: onQuitar,
+              icon: const Icon(Icons.close_rounded),
+              label: const Text('Quitar'),
+            ),
+          ),
+          CampoDictado(controlador: fila.nombre, etiqueta: 'Nombre', ejemplo: 'Carmen'),
+          const SizedBox(height: 14),
+          CampoDictado(
+            controlador: fila.parentesco,
+            etiqueta: 'Es tu…',
+            ejemplo: 'hija, nieto, esposo, amiga',
+          ),
+        ],
+      ),
     );
   }
 }

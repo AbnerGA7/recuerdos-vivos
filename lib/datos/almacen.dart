@@ -103,6 +103,16 @@ class Almacen extends ChangeNotifier {
     await _guardar();
   }
 
+  /// Personas ya registradas en otras fotos, sin repetir, para sugerirlas.
+  List<Persona> get familia {
+    final vistas = <String>{};
+    return [
+      for (final r in recuerdos)
+        for (final p in r.gente)
+          if (vistas.add(p.nombre.trim().toLowerCase())) p,
+    ];
+  }
+
   /// Sesiones de los últimos 7 días, para la racha del inicio.
   int sesionesDeLaSemana(DateTime ahora) => sesiones
       .where((s) => ahora.difference(s.fecha).inDays < 7)
