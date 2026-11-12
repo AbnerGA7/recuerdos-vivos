@@ -1,6 +1,34 @@
 /// Modelos de datos de Recuerdos Vivos. Todo se guarda solo en el teléfono.
 library;
 
+/// Una persona que aparece en una foto, con su parentesco.
+class Persona {
+  const Persona({required this.nombre, this.parentesco = ''});
+
+  final String nombre;
+
+  /// Relación con quien usa la app: "hija", "nieto", "esposo"…
+  final String parentesco;
+
+  /// "Carmen, tu hija" o solo "Carmen".
+  String get descripcion =>
+      parentesco.trim().isEmpty ? nombre.trim() : '${nombre.trim()}, tu ${parentesco.trim()}';
+
+  Map<String, dynamic> aJson() => {'nombre': nombre, 'parentesco': parentesco};
+
+  factory Persona.desdeJson(Map<String, dynamic> j) => Persona(
+        nombre: j['nombre'] as String? ?? '',
+        parentesco: j['parentesco'] as String? ?? '',
+      );
+}
+
+/// Une textos con comas y una "y" final: "a, b y c".
+String unirConY(List<String> partes) {
+  if (partes.isEmpty) return '';
+  if (partes.length == 1) return partes.first;
+  return '${partes.sublist(0, partes.length - 1).join(', ')} y ${partes.last}';
+}
+
 /// Una foto con lo que el cuidador sabe de ella.
 ///
 /// Las pistas de las preguntas salen solo de estos datos: la app nunca
@@ -11,6 +39,7 @@ class Recuerdo {
     required this.rutaFoto,
     this.titulo = '',
     this.personas = '',
+    this.gente = const [],
     this.lugar = '',
     this.cuando = '',
     this.historia = '',
@@ -20,11 +49,21 @@ class Recuerdo {
   final String id;
   final String rutaFoto;
   String titulo;
+
+  /// Texto libre de versiones anteriores. Se usa si [gente] está vacía.
   String personas;
+
+  /// Personas de la foto con nombre y parentesco.
+  List<Persona> gente;
   String lugar;
   String cuando;
   String historia;
   final DateTime creado;
+
+  /// Las personas en una frase: "Carmen, tu hija y Luis, tu nieto".
+  String get personasTexto => gente.isEmpty
+      ? personas.trim()
+      : unirConY(gente.map((p) => p.descripcion).toList());
 
   String get tituloVisible => titulo.trim().isEmpty ? 'Un recuerdo' : titulo.trim();
 
@@ -33,6 +72,7 @@ class Recuerdo {
         'rutaFoto': rutaFoto,
         'titulo': titulo,
         'personas': personas,
+        'gente': gente.map((p) => p.aJson()).toList(),
         'lugar': lugar,
         'cuando': cuando,
         'historia': historia,
@@ -44,6 +84,9 @@ class Recuerdo {
         rutaFoto: j['rutaFoto'] as String,
         titulo: j['titulo'] as String? ?? '',
         personas: j['personas'] as String? ?? '',
+        gente: (j['gente'] as List? ?? [])
+            .map((e) => Persona.desdeJson(Map<String, dynamic>.from(e as Map)))
+            .toList(),
         lugar: j['lugar'] as String? ?? '',
         cuando: j['cuando'] as String? ?? '',
         historia: j['historia'] as String? ?? '',
@@ -110,6 +153,9 @@ class Ajustes {
     this.velocidadVoz = 0.42,
     this.escalaTexto = 1.0,
     this.bienvenidaVista = false,
+    this.manosLibres = true,
+    this.vozNatural = true,
+    this.pin = '',
   });
 
   String nombre;
@@ -120,12 +166,24 @@ class Ajustes {
   double escalaTexto;
   bool bienvenidaVista;
 
+  /// El micrófono se abre y se cierra solo durante la conversación.
+  bool manosLibres;
+
+  /// Usa la voz neuronal local en lugar de la voz del teléfono.
+  bool vozNatural;
+
+  /// PIN del modo cuidador. Vacío significa sin protección.
+  String pin;
+
   Map<String, dynamic> aJson() => {
         'nombre': nombre,
         'leerEnVozAlta': leerEnVozAlta,
         'velocidadVoz': velocidadVoz,
         'escalaTexto': escalaTexto,
         'bienvenidaVista': bienvenidaVista,
+        'manosLibres': manosLibres,
+        'vozNatural': vozNatural,
+        'pin': pin,
       };
 
   factory Ajustes.desdeJson(Map<String, dynamic> j) => Ajustes(
@@ -134,5 +192,8 @@ class Ajustes {
         velocidadVoz: (j['velocidadVoz'] as num?)?.toDouble() ?? 0.42,
         escalaTexto: (j['escalaTexto'] as num?)?.toDouble() ?? 1.0,
         bienvenidaVista: j['bienvenidaVista'] as bool? ?? false,
+        manosLibres: j['manosLibres'] as bool? ?? true,
+        vozNatural: j['vozNatural'] as bool? ?? true,
+        pin: j['pin'] as String? ?? '',
       );
 }
