@@ -1,5 +1,7 @@
 <div align="center">
 
+![Recuerdos Vivos](docs/capturas/portada.png)
+
 <img src="docs/icono.png" width="120" alt="Ícono de Recuerdos Vivos">
 
 # Recuerdos Vivos
