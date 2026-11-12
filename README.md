@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🌼 Recuerdos Vivos
+<img src="docs/icono.png" width="120" alt="Ícono de Recuerdos Vivos">
+
+# Recuerdos Vivos
 
 **Una app Android que ayuda a recordar, foto por foto y con la voz.**
 
