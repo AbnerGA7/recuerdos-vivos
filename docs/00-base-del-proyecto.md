@@ -16,5 +16,5 @@ Apoyar la estimulación cognitiva de personas con deterioro cognitivo, incluido 
 ## Próximos pasos
 
 1. Definir la arquitectura técnica.
-2. Diseñar cada pantalla y su flujo.
+2. Diseñar cada pantalla y su flujo (hecho en la versión 0.2).
 3. Crear el proyecto Android base.
