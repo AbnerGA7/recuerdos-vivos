@@ -52,10 +52,10 @@ class CampoDictado extends StatelessWidget {
                     return;
                   }
                   _CampoActivo.actual = controlador;
-                  await voz.escuchar((texto) {
-                    final previo = controlador.text.trim();
-                    controlador.text = previo.isEmpty ? texto : '$previo $texto';
-                  });
+                  final texto = await voz.escucharFrase();
+                  if (texto == null) return;
+                  final previo = controlador.text.trim();
+                  controlador.text = previo.isEmpty ? texto : '$previo $texto';
                 },
               ),
             ),
