@@ -29,6 +29,9 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
+      - name: Descargar el modelo de voz
+        run: bash tool/preparar_voz.sh
+
       - name: Instalar dependencias
         run: flutter pub get
 
