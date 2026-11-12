@@ -1,0 +1,13 @@
+# Reglas de análisis estático del proyecto.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    prefer_final_locals: true
+    unawaited_futures: true
