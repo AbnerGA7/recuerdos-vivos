@@ -238,7 +238,6 @@ class _SesionGuiadaState extends State<SesionGuiada> {
   @override
   Widget build(BuildContext context) {
     final voz = VozScope.of(context);
-    final estilos = Theme.of(context).textTheme;
     final total = _motor.preguntas.length;
     final actual = _motor.indice.clamp(0, total - 1);
     final enVivo = _fase == _Fase.escuchando ? voz.textoEscuchado : _ultimoDicho;
