@@ -50,6 +50,8 @@ int distancia(String a, String b) {
 /// Tolera errores pequeños del reconocimiento de voz.
 bool seParecen(String a, String b) {
   if (a == b) return true;
+  // Los números (años, fechas) deben coincidir exactos.
+  if (RegExp(r'[0-9]').hasMatch(a) || RegExp(r'[0-9]').hasMatch(b)) return false;
   final largo = a.length < b.length ? a.length : b.length;
   if (largo < 4) return false;
   return distancia(a, b) <= (largo >= 7 ? 2 : 1);

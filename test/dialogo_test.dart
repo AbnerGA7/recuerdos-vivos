@@ -25,7 +25,7 @@ MotorDialogo _enPersonas() {
 
 const _prohibidas = ['incorrect', 'equivoc', 'mal', 'error', 'no es', 'fallaste'];
 
-void _sinRegaños(String frase) {
+void _sinReganos(String frase) {
   final n = ' ${normalizar(frase)} ';
   for (final p in _prohibidas) {
     expect(n.contains(' $p'), isFalse, reason: 'La frase "$frase" contiene "$p"');
@@ -83,7 +83,7 @@ void main() {
     expect(tres.decir, contains('Carmen, tu hija'));
     expect(tres.decir, contains('Luis, tu nieto'));
     for (final r in [uno, dos, tres]) {
-      _sinRegaños(r.decir);
+      _sinReganos(r.decir);
     }
   });
 
@@ -105,7 +105,7 @@ void main() {
     expect(r.fin, isTrue);
     expect(m.terminado, isTrue);
     expect(m.respuestas.map((x) => x.texto).join(' '), contains('Carmen y Luis'));
-    _sinRegaños(r.decir);
+    _sinReganos(r.decir);
   });
 
   test('sin datos del familiar la conversación fluye sin pistas inventadas', () {
@@ -113,7 +113,7 @@ void main() {
     var pasos = 0;
     while (!m.terminado && pasos < 30) {
       final r = m.escuchar('una respuesta cualquiera');
-      _sinRegaños(r.decir);
+      _sinReganos(r.decir);
       pasos++;
     }
     expect(m.terminado, isTrue);
