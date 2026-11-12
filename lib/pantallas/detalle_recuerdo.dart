@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../componentes/boton_escuchar.dart';
 import '../componentes/marco_foto.dart';
+import '../componentes/pin.dart';
 import '../datos/almacen.dart';
 import '../datos/modelos.dart';
 import '../servicios/voz.dart';
@@ -17,7 +18,7 @@ class DetalleRecuerdo extends StatelessWidget {
 
   String _narracion(Recuerdo r) => [
         r.tituloVisible,
-        if (r.personas.isNotEmpty) 'Están ${r.personas}.',
+        if (r.personasTexto.isNotEmpty) 'En la foto: ${r.personasTexto}.',
         if (r.lugar.isNotEmpty) 'Fue en ${r.lugar}.',
         if (r.cuando.isNotEmpty) 'Fue ${r.cuando}.',
         if (r.historia.isNotEmpty) r.historia,
@@ -39,9 +40,12 @@ class DetalleRecuerdo extends StatelessWidget {
             tooltip: 'Editar',
             iconSize: 30,
             icon: const Icon(Icons.edit_rounded),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => NuevoRecuerdo(editar: r)),
-            ),
+            onPressed: () async {
+              if (!await pedirPin(context) || !context.mounted) return;
+              await Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => NuevoRecuerdo(editar: r)),
+              );
+            },
           ),
           IconButton(
             tooltip: 'Borrar',
@@ -69,7 +73,8 @@ class DetalleRecuerdo extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            if (r.personas.isNotEmpty) _Dato(icono: Icons.people_alt_rounded, texto: r.personas),
+            if (r.personasTexto.isNotEmpty)
+              _Dato(icono: Icons.people_alt_rounded, texto: r.personasTexto),
             if (r.lugar.isNotEmpty) _Dato(icono: Icons.place_rounded, texto: r.lugar),
             if (r.cuando.isNotEmpty) _Dato(icono: Icons.event_rounded, texto: r.cuando),
             if (r.historia.isNotEmpty) ...[
@@ -97,6 +102,7 @@ class DetalleRecuerdo extends StatelessWidget {
 
   Future<void> _borrar(BuildContext context, Recuerdo r) async {
     final almacen = AlmacenScope.leer(context);
+    if (!await pedirPin(context) || !context.mounted) return;
     final si = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(

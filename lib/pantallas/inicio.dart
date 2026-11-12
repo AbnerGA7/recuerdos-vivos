@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../componentes/boton_escuchar.dart';
 import '../componentes/boton_grande.dart';
 import '../componentes/marco_foto.dart';
+import '../componentes/pin.dart';
 import '../datos/almacen.dart';
 import '../datos/modelos.dart';
 import '../datos/preguntas.dart';
@@ -51,9 +52,12 @@ class Inicio extends StatelessWidget {
                 iconSize: 32,
                 style: IconButton.styleFrom(minimumSize: const Size(60, 60)),
                 icon: const Icon(Icons.settings_rounded),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const PantallaAjustes()),
-                ),
+                onPressed: () async {
+                  if (!await pedirPin(context) || !context.mounted) return;
+                  await Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const PantallaAjustes()),
+                  );
+                },
               ),
             ],
           ),
