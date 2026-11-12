@@ -27,12 +27,27 @@ class VozNeuronal {
   static const _version = 'voz_v1';
 
   /// Copia el modelo a la carpeta privada (solo la primera vez) y lo carga.
-  Future<bool> preparar() async {
+  ///
+  /// Antes de cargar deja una marca en disco y la borra al terminar bien.
+  /// Si la app se cierra durante la carga, la marca queda y en el siguiente
+  /// arranque la voz neuronal se desactiva sola para que la app siga
+  /// funcionando con la voz del teléfono. Con [reintentar] se vuelve a probar.
+  Future<bool> preparar({bool reintentar = false}) async {
     if (estado == EstadoVozNeuronal.lista) return true;
     if (estado == EstadoVozNeuronal.preparando) return false;
     estado = EstadoVozNeuronal.preparando;
     try {
       final base = await getApplicationSupportDirectory();
+      final guardia = File('${base.path}/voz_cargando');
+      if (await guardia.exists()) {
+        if (!reintentar) {
+          debugPrint('La voz neuronal cerró la app la última vez; se desactiva.');
+          estado = EstadoVozNeuronal.noDisponible;
+          return false;
+        }
+        await guardia.delete();
+      }
+      await guardia.create(recursive: true);
       final carpeta = Directory('${base.path}/$_version');
       final marca = File('${carpeta.path}/listo');
       if (!await marca.exists()) {
@@ -63,7 +78,8 @@ class VozNeuronal {
         (recepcion.sendPort, carpeta.path),
         errorsAreFatal: false,
       );
-      final cargo = await listo.future.timeout(const Duration(seconds: 40), onTimeout: () => false);
+      final cargo = await listo.future.timeout(const Duration(seconds: 60), onTimeout: () => false);
+      await guardia.delete();
       estado = cargo ? EstadoVozNeuronal.lista : EstadoVozNeuronal.noDisponible;
     } catch (e) {
       debugPrint('Voz neuronal no disponible: $e');
@@ -124,6 +140,11 @@ void _trabajar((SendPort, String) entrada) {
   salida.send(pedidos.sendPort);
   sherpa.OfflineTts? tts;
   try {
+    // Comprueba los archivos antes de cargar: si falta alguno, el motor
+    // nativo cerraría la app en lugar de devolver un error.
+    for (final ruta in ['voz.onnx', 'tokens.txt', 'espeak-ng-data/phontab']) {
+      if (!File('$carpeta/$ruta').existsSync()) throw StateError('Falta $ruta');
+    }
     sherpa.initBindings();
     tts = sherpa.OfflineTts(
       sherpa.OfflineTtsConfig(
@@ -137,7 +158,9 @@ void _trabajar((SendPort, String) entrada) {
         ),
       ),
     );
-    salida.send(true);
+    // Frase de prueba: confirma que el modelo genera audio antes de usarlo.
+    final prueba = tts.generate(text: 'Hola.');
+    salida.send(prueba.samples.isNotEmpty);
   } catch (_) {
     salida.send(false);
     return;

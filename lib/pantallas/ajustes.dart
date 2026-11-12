@@ -68,7 +68,7 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                 onChanged: (v) {
                   almacen.actualizarAjustes((x) => x.vozNatural = v);
                   voz.usarVozNatural = v;
-                  if (v) voz.prepararVozNatural();
+                  if (v) voz.prepararVozNatural(reintentar: true);
                 },
                 title: Text('Voz natural', style: estilos.titleMedium),
                 subtitle: Text(
@@ -76,7 +76,7 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                     EstadoVozNeuronal.lista => 'Lista. Funciona sin internet.',
                     EstadoVozNeuronal.preparando => 'Preparando la voz…',
                     EstadoVozNeuronal.noDisponible =>
-                      'No se pudo cargar. Se usa la voz del teléfono.',
+                      'No se pudo cargar. Se usa la voz del teléfono. Apaga y enciende para reintentar.',
                     EstadoVozNeuronal.apagada => 'Se usa la voz del teléfono.',
                   },
                   style: estilos.bodyMedium,

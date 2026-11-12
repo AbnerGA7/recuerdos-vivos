@@ -67,9 +67,9 @@ class Voz extends ChangeNotifier {
   }
 
   /// Carga la voz neuronal en segundo plano y avisa cuando está lista.
-  Future<void> prepararVozNatural() async {
+  Future<void> prepararVozNatural({bool reintentar = false}) async {
     notifyListeners();
-    await neuronal.preparar();
+    await neuronal.preparar(reintentar: reintentar);
     notifyListeners();
   }
 
