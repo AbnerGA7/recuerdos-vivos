@@ -16,7 +16,7 @@ enum FalloEscucha { ninguno, silencio, sinPermiso, noDisponible }
 
 /// Lee textos en voz alta y escucha respuestas habladas.
 ///
-/// Para hablar usa la voz neuronal local (Piper). Si no está lista o falla,
+/// Para hablar usa la voz neuronal local (Kokoro). Si no está lista o falla,
 /// usa la mejor voz en español del teléfono. Para escuchar usa el
 /// reconocimiento de voz de Android, que se cierra solo al detectar silencio.
 class Voz extends ChangeNotifier {

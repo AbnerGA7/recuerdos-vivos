@@ -11,7 +11,7 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 /// Estado de la voz neuronal.
 enum EstadoVozNeuronal { apagada, preparando, lista, noDisponible }
 
-/// Voz neuronal local (Piper) que genera el audio dentro del teléfono.
+/// Voz neuronal local (Kokoro, en español) que genera el audio dentro del teléfono.
 ///
 /// El modelo corre en un isolate aparte para no trabar la pantalla.
 /// Cada frase se convierte en un archivo WAV que luego se reproduce.
@@ -24,7 +24,13 @@ class VozNeuronal {
   int _pedido = 0;
   final Map<int, Completer<String?>> _pendientes = {};
 
-  static const _version = 'voz_v1';
+  /// Carpeta de datos de la voz. Cambiar el número obliga a copiar los archivos otra vez.
+  static const _version = 'kokoro_v1';
+
+  /// Archivos del modelo Kokoro que van dentro de la app (assets/voz/kokoro).
+  static const _archivosModelo = ['model.int8.onnx', 'voices.bin', 'tokens.txt'];
+
+  static const _canal = MethodChannel('recuerdos/recursos');
 
   /// Copia el modelo a la carpeta privada (solo la primera vez) y lo carga.
   ///
@@ -48,14 +54,19 @@ class VozNeuronal {
         await guardia.delete();
       }
       await guardia.create(recursive: true);
+      await _borrarVersionAnterior(base);
+
       final carpeta = Directory('${base.path}/$_version');
       final marca = File('${carpeta.path}/listo');
       if (!await marca.exists()) {
         await carpeta.create(recursive: true);
-        await _copiar('assets/voz/voz.onnx', '${carpeta.path}/voz.onnx');
-        await _copiar('assets/voz/tokens.txt', '${carpeta.path}/tokens.txt');
-        final zip = await rootBundle.load('assets/voz/espeak.zip');
-        await compute(_descomprimir, (zip.buffer.asUint8List(), carpeta.path));
+        for (final archivo in _archivosModelo) {
+          await _copiar('assets/voz/kokoro/$archivo', '${carpeta.path}/$archivo');
+        }
+        final zip = '${carpeta.path}/espeak.zip';
+        await _copiar('assets/voz/espeak.zip', zip);
+        await compute(_descomprimir, (zip, carpeta.path));
+        await File(zip).delete();
         await marca.writeAsString('ok');
       }
       _temporal = Directory('${(await getTemporaryDirectory()).path}/frases');
@@ -78,7 +89,7 @@ class VozNeuronal {
         (recepcion.sendPort, carpeta.path),
         errorsAreFatal: false,
       );
-      final cargo = await listo.future.timeout(const Duration(seconds: 60), onTimeout: () => false);
+      final cargo = await listo.future.timeout(const Duration(seconds: 90), onTimeout: () => false);
       await guardia.delete();
       estado = cargo ? EstadoVozNeuronal.lista : EstadoVozNeuronal.noDisponible;
     } catch (e) {
@@ -88,12 +99,18 @@ class VozNeuronal {
     return estado == EstadoVozNeuronal.lista;
   }
 
+  /// Borra la carpeta de la voz anterior (Piper) para liberar espacio en el teléfono.
+  static Future<void> _borrarVersionAnterior(Directory base) async {
+    final anterior = Directory('${base.path}/voz_v1');
+    if (await anterior.exists()) await anterior.delete(recursive: true);
+  }
+
+  /// Copia un recurso empaquetado en la app a un archivo, por trozos.
   static Future<void> _copiar(String recurso, String destino) async {
-    final datos = await rootBundle.load(recurso);
-    await File(destino).writeAsBytes(
-      datos.buffer.asUint8List(datos.offsetInBytes, datos.lengthInBytes),
-      flush: true,
-    );
+    await _canal.invokeMethod<bool>('copiarAsset', {
+      'asset': recurso,
+      'destino': destino,
+    });
   }
 
   /// Genera el audio de una frase. Devuelve la ruta del WAV o null si falla.
@@ -118,10 +135,13 @@ class VozNeuronal {
   }
 }
 
+/// Voz femenina en español del modelo Kokoro (ef_dora, ID 28 en el modelo).
+const _vozSid = 28;
+
 /// Extrae el zip de datos de pronunciación. Corre fuera del hilo principal.
-void _descomprimir((Uint8List, String) entrada) {
-  final (bytes, destino) = entrada;
-  for (final archivo in ZipDecoder().decodeBytes(bytes)) {
+void _descomprimir((String, String) entrada) {
+  final (rutaZip, destino) = entrada;
+  for (final archivo in ZipDecoder().decodeBytes(File(rutaZip).readAsBytesSync())) {
     final ruta = '$destino/${archivo.name}';
     if (archivo.isFile) {
       File(ruta)
@@ -142,24 +162,26 @@ void _trabajar((SendPort, String) entrada) {
   try {
     // Comprueba los archivos antes de cargar: si falta alguno, el motor
     // nativo cerraría la app en lugar de devolver un error.
-    for (final ruta in ['voz.onnx', 'tokens.txt', 'espeak-ng-data/phontab']) {
+    for (final ruta in _VozNeuronalArchivos.todos) {
       if (!File('$carpeta/$ruta').existsSync()) throw StateError('Falta $ruta');
     }
     sherpa.initBindings();
     tts = sherpa.OfflineTts(
       sherpa.OfflineTtsConfig(
         model: sherpa.OfflineTtsModelConfig(
-          vits: sherpa.OfflineTtsVitsModelConfig(
-            model: '$carpeta/voz.onnx',
+          kokoro: sherpa.OfflineTtsKokoroModelConfig(
+            model: '$carpeta/model.int8.onnx',
+            voices: '$carpeta/voices.bin',
             tokens: '$carpeta/tokens.txt',
             dataDir: '$carpeta/espeak-ng-data',
+            lang: 'es',
           ),
           numThreads: 2,
         ),
       ),
     );
     // Frase de prueba: confirma que el modelo genera audio antes de usarlo.
-    final prueba = tts.generate(text: 'Hola.');
+    final prueba = tts.generate(text: 'Hola.', sid: _vozSid);
     salida.send(prueba.samples.isNotEmpty);
   } catch (_) {
     salida.send(false);
@@ -169,7 +191,7 @@ void _trabajar((SendPort, String) entrada) {
     if (mensaje is! (int, String, double, String)) return;
     final (id, texto, velocidad, ruta) = mensaje;
     try {
-      final audio = tts!.generate(text: texto, speed: velocidad);
+      final audio = tts!.generate(text: texto, sid: _vozSid, speed: velocidad);
       final ok = sherpa.writeWave(
         filename: ruta,
         samples: audio.samples,
@@ -180,4 +202,14 @@ void _trabajar((SendPort, String) entrada) {
       salida.send((id, null));
     }
   });
+}
+
+/// Rutas relativas que deben existir antes de cargar el modelo.
+abstract final class _VozNeuronalArchivos {
+  static const todos = [
+    'model.int8.onnx',
+    'voices.bin',
+    'tokens.txt',
+    'espeak-ng-data/phontab',
+  ];
 }

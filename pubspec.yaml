@@ -24,7 +24,7 @@ dependencies:
   # Escuchar la respuesta hablada (voz a texto del teléfono).
   speech_to_text: ^7.3.0
   # Voz neuronal local (Piper) que suena natural y funciona sin internet.
-  sherpa_onnx: ^1.12.0
+  sherpa_onnx: ^1.13.8
 
 dev_dependencies:
   flutter_test:
@@ -34,8 +34,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/voz/voz.onnx
-    - assets/voz/tokens.txt
+    - assets/voz/kokoro/
     - assets/voz/espeak.zip
   fonts:
     - family: AtkinsonHyperlegible
