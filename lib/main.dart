@@ -12,5 +12,8 @@ Future<void> main() async {
   final voz = Voz();
   runApp(RecuerdosVivosApp(almacen: almacen, voz: voz));
   await almacen.cargar();
-  unawaited(voz.iniciar(velocidad: almacen.ajustes.velocidadVoz));
+  unawaited(voz.iniciar(
+    velocidad: almacen.ajustes.velocidadVoz,
+    vozNatural: almacen.ajustes.vozNatural,
+  ));
 }

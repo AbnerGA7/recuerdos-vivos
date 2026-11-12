@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../componentes/campo_dictado.dart';
+import '../componentes/pin.dart';
 import '../datos/almacen.dart';
 import '../servicios/voz.dart';
+import '../servicios/voz_neuronal.dart';
 import '../tema/colores.dart';
 
 /// Ajustes de voz, tamaño de letra y nombre.
@@ -53,6 +55,33 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                 title: Text('Leer las preguntas en voz alta', style: estilos.titleMedium),
                 subtitle: Text('Recomendado', style: estilos.bodyMedium),
               ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: a.manosLibres,
+                onChanged: (v) => almacen.actualizarAjustes((x) => x.manosLibres = v),
+                title: Text('Conversación manos libres', style: estilos.titleMedium),
+                subtitle: Text('El micrófono se abre y se cierra solo', style: estilos.bodyMedium),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: a.vozNatural,
+                onChanged: (v) {
+                  almacen.actualizarAjustes((x) => x.vozNatural = v);
+                  voz.usarVozNatural = v;
+                  if (v) voz.prepararVozNatural();
+                },
+                title: Text('Voz natural', style: estilos.titleMedium),
+                subtitle: Text(
+                  switch (voz.neuronal.estado) {
+                    EstadoVozNeuronal.lista => 'Lista. Funciona sin internet.',
+                    EstadoVozNeuronal.preparando => 'Preparando la voz…',
+                    EstadoVozNeuronal.noDisponible =>
+                      'No se pudo cargar. Se usa la voz del teléfono.',
+                    EstadoVozNeuronal.apagada => 'Se usa la voz del teléfono.',
+                  },
+                  style: estilos.bodyMedium,
+                ),
+              ),
               const SizedBox(height: 12),
               Text('Velocidad de la voz', style: estilos.titleMedium),
               Slider(
@@ -95,6 +124,29 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                   textStyle: estilos.titleMedium,
                 ),
               ),
+              const SizedBox(height: 32),
+              Text('Modo cuidador', style: estilos.headlineMedium),
+              const SizedBox(height: 8),
+              Text(
+                a.pin.isEmpty
+                    ? 'Sin PIN. Cualquiera puede editar o borrar fotos.'
+                    : 'Con PIN. Se pide para editar, borrar y abrir los ajustes.',
+                style: estilos.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final nuevo = await crearPin(context);
+                  if (nuevo != null) await almacen.actualizarAjustes((x) => x.pin = nuevo);
+                },
+                icon: const Icon(Icons.lock_outline_rounded, size: 28),
+                label: Text(a.pin.isEmpty ? 'Crear PIN' : 'Cambiar PIN'),
+              ),
+              if (a.pin.isNotEmpty)
+                TextButton(
+                  onPressed: () => almacen.actualizarAjustes((x) => x.pin = ''),
+                  child: const Text('Quitar PIN'),
+                ),
               const SizedBox(height: 40),
               Container(
                 padding: const EdgeInsets.all(20),
@@ -114,7 +166,7 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                     const SizedBox(height: 8),
                     Text(
                       'Las fotos y lo que cuentas se guardan solo en este teléfono. '
-                      'La app no usa internet ni envía tus datos.',
+                      'La voz se genera dentro del teléfono y la app no envía tus datos.',
                       style: estilos.bodyMedium,
                     ),
                     const SizedBox(height: 16),
