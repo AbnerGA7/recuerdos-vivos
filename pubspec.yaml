@@ -1,20 +1,35 @@
 name: recuerdos_vivos
-description: App de estimulación cognitiva con fotos personales.
+description: App de estimulación cognitiva con fotos personales y voz.
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
+  flutter_localizations:
+    sdk: flutter
+  # Leer en voz alta (texto a voz del teléfono).
+  flutter_tts: ^4.2.5
+  # Elegir fotos de la galería o tomarlas con la cámara.
+  image_picker: ^1.2.0
+  # Carpeta privada de la app para guardar fotos y datos.
+  path_provider: ^2.1.5
+  # Escuchar la respuesta hablada (voz a texto del teléfono).
+  speech_to_text: ^7.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: AtkinsonHyperlegible
+      fonts:
+        - asset: assets/fuentes/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fuentes/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
