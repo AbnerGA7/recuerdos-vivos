@@ -29,22 +29,24 @@ Un familiar sube fotos importantes y cuenta quién sale, dónde y cuándo fue.
 Después, la app conversa con la persona sobre cada foto:
 
 1. **Muestra la foto** en grande, con marco de álbum.
-2. **Lee la pregunta en voz alta**: “¿Quiénes están en esta foto?”.
-3. **La persona responde hablando** con un solo botón grande (o escribe, si prefiere).
-4. Si no recuerda, puede pedir **una pista suave** o seguir sin culpa.
+2. **Pregunta con una voz natural**: “¿Quiénes están en esta foto?”.
+3. **El micrófono se abre solo**, la persona responde y se cierra con el silencio.
+4. **La app contesta como en un diálogo**: celebra si acierta y, si no, ayuda con
+   pistas cada vez más claras (“es tu hija”, “empieza con C”). Nunca dice que está mal.
 5. Al final, elige **cómo se siente** y la conversación queda en su **diario**.
 
 ## Pensada para quien la usa
 
 | Necesidad | Cómo la resolvemos |
 |---|---|
-| Dificultad para leer o escribir | Todo se lee en voz alta y se responde hablando |
+| Dificultad para leer o escribir | Conversación manos libres con voz neuronal local |
 | Baja visión | Letra Atkinson Hyperlegible, contraste AAA y tres tamaños de letra |
 | Poca precisión al tocar | Botones de 68 px de alto y tarjetas completas tocables |
 | Desorientación | Navegación fija de 3 secciones que nunca cambia de lugar |
 | Frustración al no recordar | No hay respuestas incorrectas; se celebra participar |
 | Cansancio | Sesiones de 5 preguntas y cierre con pregunta de ánimo |
-| Privacidad | Fotos y respuestas solo en el teléfono, sin internet |
+| Privacidad | Fotos, respuestas y voz dentro del teléfono |
+| Cuidado de los datos | Modo cuidador con PIN para editar y borrar |
 
 ## Pantallas
 
@@ -83,8 +85,8 @@ lib/
 ├── app.dart             Tema, idioma y acceso a datos y voz
 ├── tema/                Paleta y tema accesible
 ├── componentes/         Botón de voz, marco de foto, campos con dictado…
-├── datos/               Modelos, preguntas guiadas y almacenamiento local
-├── servicios/voz.dart   Leer en voz alta y escuchar respuestas
+├── datos/               Modelos, motor de diálogo y almacenamiento local
+├── servicios/           Voz neuronal, voz de respaldo y escucha
 ├── pantallas/           Todas las pantallas
 └── util/                Fechas en español
 ```
@@ -98,6 +100,7 @@ lib/
 - [Voz](docs/04-voz.md)
 - [Privacidad](docs/05-privacidad.md)
 - [Hoja de ruta](docs/06-hoja-de-ruta.md)
+- [Diálogo con pistas](docs/07-dialogo.md)
 
 ## Autor
 
