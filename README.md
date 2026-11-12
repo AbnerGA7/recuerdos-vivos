@@ -165,6 +165,16 @@ test/                    Pruebas del diálogo, los modelos y las fechas
 | [Hoja de ruta](docs/06-hoja-de-ruta.md) | Lo hecho y lo que viene |
 | [Diálogo](docs/07-dialogo.md) | Pistas en escalones |
 
+## Avance del proyecto
+
+El repositorio muestra el avance por commits pequeños y con CI en cada cambio: análisis, pruebas y compilación de la APK.
+
+![Repositorio en GitHub](docs/capturas/repositorio.jpg)
+
+![Historial de commits](docs/capturas/commits.jpg)
+
+La voz neuronal ahora es Kokoro (español, sin internet). El modelo no va en el repositorio: se descarga con `tool/preparar_voz.sh` o `tool/preparar_voz.ps1`.
+
 ## Lo que viene
 
 - IA local para describir la foto sin internet
