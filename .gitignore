@@ -20,3 +20,6 @@ key.properties
 .idea/
 .vscode/
 .DS_Store
+
+# Modelo de voz descargado con tool/preparar_voz (no va en el repositorio)
+assets/voz/kokoro/
