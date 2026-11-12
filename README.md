@@ -167,6 +167,16 @@ test/                    Pruebas del diálogo, los modelos y las fechas
 
 ## Avance del proyecto
 
+En el teléfono (Xiaomi), así se ve la app:
+
+<p>
+  <img src="docs/capturas/app-inicio.jpg" width="180" alt="Inicio sin fotos">
+  <img src="docs/capturas/app-bienvenida.jpg" width="180" alt="Bienvenida">
+  <img src="docs/capturas/app-familia.jpg" width="180" alt="Un familiar agrega fotos">
+  <img src="docs/capturas/app-nombre.jpg" width="180" alt="Pide tu nombre">
+  <img src="docs/capturas/app-ajustes.jpg" width="180" alt="Ajustes de privacidad y modo cuidador">
+</p>
+
 El repositorio muestra el avance por commits pequeños y con CI en cada cambio: análisis, pruebas y compilación de la APK.
 
 ![Repositorio en GitHub](docs/capturas/repositorio.jpg)
